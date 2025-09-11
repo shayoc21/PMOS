@@ -36,3 +36,8 @@ It should boot from a floppy disk in fat12, load stage 2 into memory, put the sy
 Stage one bootloader, loads stage two into 0x0050:0x0000
 stage two just prints a welcome message for now.
 
+#### v0.0.2
+
+Stage two bootloader 'finished'. Temporary GDT with code and data segment.
+A20 enabled, computer booted into protected mode.
+
