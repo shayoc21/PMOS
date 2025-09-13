@@ -44,5 +44,5 @@ A20 enabled, computer booted into protected mode.
 #### v0.0.3
 
 Completely rewritten stage one bootloader, now with FAT32.
-Loads stage two from a reserved sector instead of saving it as a file.
+Loads stage two from a reserved sector instead of loading it as a file.
 Does use extended read now, if I ever intend to port to older hardware I'll have to add CHS conversion.
