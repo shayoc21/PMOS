@@ -29,7 +29,7 @@ I am using bochs, with ndisasm to disassemble
 ## v0.0
 
 Version 0.0 is the first stable booting version of my operating system.
-It should boot from a floppy disk in fat12, load stage 2 into memory, put the system into protected mode, and finally read the kernel from the hard disk into memory.
+It will contain a bootloader, a protected mode disk driver and the code to load my kernel.
 
 #### v0.0.1
 
