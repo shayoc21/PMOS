@@ -50,3 +50,14 @@ Does use extended read now, if I ever intend to port to older hardware I'll have
 #### v0.0.4
 
 Bootloader finished, Kernel loaded in protected mode from loader.c with ATA PIO driver. Kernel has not been started yet.
+
+----
+## v0.1
+
+Version 0.1 will set up rudimentary paging/memory allocation, a GDT and an IDT to allow a single user-space TTY to run.
+This TTY will have some simple UNIX commands, but I don't expect real file io yet.
+
+#### v0.1.0
+
+Paging set up just enough to launch the kernel at virtual 0xC0000000, message printed.
+

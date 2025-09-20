@@ -24,7 +24,7 @@ DAP:
 clusterhigh dw 0x0000
 clusterlow  dw 0x0000
 
-%include "./include/print.asm"
+%include "./src/bootloader/include/print.asm"
 
 CODESEG equ csdescriptor - gdtstart
 DATASEG equ dsdescriptor - gdtstart

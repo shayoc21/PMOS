@@ -45,7 +45,7 @@ bits 16
 start:
 	jmp main
 
-%include "./include/print.asm"
+%include "./src/bootloader/include/print.asm"
 
 main:
 	cli
