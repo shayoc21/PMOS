@@ -24,6 +24,7 @@ typedef unsigned int page_entry;	//polymorphic type page_entry represents 4MB, 4
 static page_entry page_directory[1024] __attribute__((aligned(4096)));
 static page_entry first_page_table[1024] __attribute__((aligned(4096)));
 static page_entry kernel_page_table[1024] __attribute__((aligned(4096)));
+static page_entry kernel_stack_pages[1024] __attribute__((aligned(4096)));
 
 void initialise_paging()
 {
@@ -35,6 +36,10 @@ void initialise_paging()
 	//the kernel could be placed in a PSE 4MB page, but that'd remove compatibility for i386 (and i'd have to recompile gcc which takes about 2 hours)
 	for (int i = 0; i < 1024; i++) { kernel_page_table[i] = (0x100000 + (i * 0x1000)) | 0b000000000011; }
 	page_directory[768] = ((page_entry)kernel_page_table) | 0b00000000011;
+	//kernel stack will be 4 pages (16KB) and live just above the stack pages at 0xC0400000 -- SP would be 0xC07FFFFF
+	for (int i = 0; i < 1020; i++) { kernel_stack_pages[i] = (page_entry)0x00000002; }
+	for (int i = 1020; i < 1024; i++) { kernel_stack_pages[i] = (0x500000 + (i * 0x1000)) | 0b000000000011; } 
+	page_directory[769] = ((page_entry)kernel_stack_pages) | 0b00000000011;
 	unsigned int cr0;
 	__asm__ volatile ("mov %0, %%cr3" : : "r"(page_directory));
 	__asm__ volatile ("mov %%cr0, %0" :   "=r"(cr0));
