@@ -40,42 +40,45 @@ enum segments
 };
 void initialise_global_descriptor_table()
 {
-	gdt[GDT_NULL] = {0};
-	gdt[GDT_KERNEL_CODE] =
+	gdt[GDT_NULL] = (struct gdt_entry){0};
+	gdt[GDT_KERNEL_CODE] = (struct gdt_entry)
 	{
-		.limit_low	= 0xFFFF;
-		.base_low 	= 0x0000;
-		.base_middle 	= 0x00;
-		.access		= 0b10011010;
-		.flags_limit_low= 0b11001111;
-		.base_high	= 0x00;
+		0xFFFF,		// limit_low
+		0x0000,		// base_low
+		0x00,		// base_middle
+		0b10011010,	// access
+		0b11001111,	// flags_limit_low
+		0x00		// base_high
 	};
-	gdt[GDT_KERNEL_DATA] =
+
+	gdt[GDT_KERNEL_DATA] = (struct gdt_entry)
 	{
-		.limit_low	= 0xFFFF;
-		.base_low 	= 0x0000;
-		.base_middle 	= 0x00;
-		.access		= 0x10010010;
-		.flags_limit_low= 0b11001111;
-		.base_high	= 0x00;
+		0xFFFF,		// limit_low
+		0x0000,		// base_low
+		0x00,		// base_middle
+		0b10010010,	// access
+		0b11001111,	// flags_limit_low
+		0x00		// base_high
 	};
-	gdt[GDT_USER_CODE] =
+
+	gdt[GDT_USER_CODE] = (struct gdt_entry)
 	{
-		.limit_low	= 0xFFFF;
-		.base_low 	= 0x0000;
-		.base_middle 	= 0x00;
-		.access		= 0b11111010;
-		.flags_limit_low= 0x11001111;
-		.base_high	= 0x00;
+		0xFFFF,		// limit_low
+		0x0000,		// base_low
+		0x00,		// base_middle
+		0b11111010,	// access
+		0b11001111,	// flags_limit_low
+		0x00		// base_high
 	};
-	gdt[GDT_USER_DATA] =
+
+	gdt[GDT_USER_DATA] = (struct gdt_entry)
 	{
-		.limit_low	= 0xFFFF;
-		.base_low 	= 0x0000;
-		.base_middle 	= 0x00;
-		.access		= 0b11110010;
-		.flags_limit_low= 0x11001111;
-		.base_high	= 0x00;
+		0xFFFF,		// limit_low
+		0x0000,		// base_low
+		0x00,		// base_middle
+		0b11110010,	// access
+		0b11001111,	// flags_limit_low
+		0x00		// base_high
 	};
 }
 
@@ -119,191 +122,6 @@ struct task_state_segment
 };
 static struct task_state_segment global_TSS = {0};
 
-struct idt_entry
-{
-	u16_t offset_low;
-	u16_t segment_selector;
-	u8_t reserved;
-	u8_t flags;
-	u16_t offset_high;
-}; __attribute__((packed));
-static struct idt[256];
-struct interrupt
-{
-	void(*isr_ptr)(void);
-	u8_t flags;
-};
-#define __ISR__ __attribute__((interrupt))
-#define INTERRUPT_TASK
-#define INTERRUPT_TRAP
-#define INTERRUPT_FAULT
-#define INTERRUPT_ABORT
-#define INTERRUPT_NONTRAPPING
-__ISR__ void unhandled_interrupt(void* frame)
-{
-    vga_write_string("INTERRUPT NOT HANDLED", 24, 3, TEXT_COLOUR_FAILURE);
-}
-
-// CPU exceptions
-__ISR__ void int_0_divide_error(void* frame)
-{
-	vga_write_string("(INT.0) DIVIDE ERROR.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_1_debug_exception(void* frame)
-{
-	vga_write_string("(INT.1) DEBUG EXCEPTION.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_2_nmi_exception(void* frame)
-{
-	vga_write_string("(INT.2) NMI EXCEPTION.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_3_breakpoint(void* frame)
-{
-	vga_write_string("(INT.3) BREAKPOINT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_4_overflow(void* frame)
-{
-	vga_write_string("(INT.4) OVERFLOW.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_5_bound_range_exceeded(void* frame)
-{
-	vga_write_string("(INT.5) BOUND RANGE EXCEEDED.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_6_invalid_opcode(void* frame)
-{
-	vga_write_string("(INT.6) INVALID OPCODE.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_7_device_not_available(void* frame)
-{
-	vga_write_string("(INT.7) DEVICE NOT AVAILABLE.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_8_double_fault(void* frame)
-{
-	vga_write_string("(INT.8) DOUBLE FAULT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_9_coprocessor_segment_overrun(void* frame)
-{
-	vga_write_string("(INT.9) COPROCESSOR SEGMENT OVERRUN.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_10_invalid_tss(void* frame)
-{
-	vga_write_string("(INT.10) INVALID TSS.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_11_segment_not_present(void* frame)
-{
-	vga_write_string("(INT.11) SEGMENT NOT PRESENT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_12_stack_segment_fault(void* frame)
-{
-	vga_write_string("(INT.12) STACK SEGMENT FAULT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_13_general_protection_fault(void* frame)
-{
-	vga_write_string("(INT.13) GENERAL PROTECTION FAULT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_14_page_fault(void* frame)
-{
-	vga_write_string("(INT.14) PAGE FAULT.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_15_reserved(void* frame)
-{
-	vga_write_string("(INT.15) RESERVED.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_16_x87_fpu_floating_point_error(void* frame)
-{
-	vga_write_string("(INT.16) X87 FPU FLOATING POINT ERROR.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_17_alignment_check(void* frame)
-{
-	vga_write_string("(INT.17) ALIGNMENT CHECK.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_18_machine_check(void* frame)
-{
-	vga_write_string("(INT.18) MACHINE CHECK.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_19_simd_floating_point_exception(void* frame)
-{
-	vga_write_string("(INT.19) SIMD FLOATING POINT EXCEPTION.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_20_virtualisation_exception(void* frame)
-{
-	vga_write_string("(INT.20) VIRTUALISATION EXCEPTION.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-__ISR__ void int_21_control_protection_exception(void* frame)
-{
-	vga_write_string("(INT.21) CONTROL PROTECTION EXCEPTION.", 24, 3, TEXT_COLOUR_FAILURE);
-}
-
-void initialise_interrupt_descriptor_table()
-{
-	//icw1
-	outb(0x0020, 0x11);
-	outb(0x00A0, 0x11);
-	//icw2
-	outb(0x0021, 0x20);
-	outb(0x00A1, 0x28);
-	//icw3
-	outb(0x0021, 0x04);
-	outb(0x00A1, 0x02);
-	//icw4
-	outb(0x0021, 0x01);
-	oubt(0x00A1, 0x01);
-
-	struct interrupt cpu_exceptions[22] = 
-	{
-		(struct interrupt){&int_0_divide_error, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_1_debug_exception, (0b1000 | INTERRUPT_TRAP)},
-		(struct interrupt){&int_2_nmi_exception, (0b1000 | INTERRUPT_NONTRAPPING)},
-		(struct interrupt){&int_3_breakpoint, (0b1000 | INTERRUPT_TRAP)},
-		(struct interrupt){&int_4_overflow, (0b1000 | INTERRUPT_TRAP)},
-		(struct interrupt){&int_5_bound_range_exceeded, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_6_invalid_opcode, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_7_device_not_available, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_8_double_fault, (0b1000 | INTERRUPT_ABORT)},
-		(struct interrupt){&int_9_coprocessor_segment_overrun, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_10_invalid_tss, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_11_segment_not_present, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_12_stack_segment_fault, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_13_general_protection_fault, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_14_page_fault, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_15_reserved, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_16_x87_fpu_floating_point_error, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_17_alignment_check, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_18_machine_check, (0b1000 | INTERRUPT_ABORT)},
-		(struct interrupt){&int_19_simd_floating_point_exception, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_20_virtualisation_exception, (0b1000 | INTERRUPT_FAULT)},
-		(struct interrupt){&int_21_control_protection_exception, (0b1000 | INTERRUPT_FAULT)}
-	};	
-
-	for (i32_t i = 0; i < 22; i++)
-	{
-		struct interrupt exception_i = cpu_exceptions[i];
-		idt[i] = 
-		{
-			.offset_low = (u16_t)(exception_i.isr_ptr & 0xFFFF);
-			.segment_selector = (u8_t)GDT_SELECTOR(1, 0);
-			.reserved = (u8_t)0x00;
-			.flags = (u8_t)exception_i.flags;
-			.offset_high = (u16_t)((exception_i.isr_ptr >> 16) * 0xFFFF);
-		};
-	}
-
-
-	}
-	//fill idt with "unhandled" isr
-	void (*unhandled_isr_ptr)(void*) = &unhandled_interrupt;
-	for (i32_t i = 22; i < 256; i++)
-	{
-		idt[i] = 
-		{
-			.offset_low = (u16_t)(unhandled_isr_ptr & 0xFFFF);
-			.segment_selector = (u8_t)GDT_SELECTOR(1, 0);
-			.reserved = (u8_t)0x00;
-			.flags = 0b11101110;
-			.offset_high = (u16_t)((unhandled_isr_ptr >> 16) & 0xFFFF);
-		};
-	}
-}
 
 void call_interrupt(u8_t vector)
 {
@@ -317,7 +135,7 @@ void initialise_task_state_segment(gdt_selector ss_selector, u32_t sp)
 	unsigned long long base = (unsigned long long)&global_TSS;
 	u32_t limit = sizeof(global_TSS) - 1;
 
-	gdt[GDT_TSS] = 
+	gdt[GDT_TSS] = (struct gdt_entry)
 	{
 		.limit_low = limit & 0xFFFF;
 		.base_low = base & 0xFFFF;

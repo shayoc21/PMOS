@@ -2,7 +2,7 @@ rm -rf build/*
 mkdir -p build/bootloader
 nasm src/bootloader/boot.asm -f bin -o build/bootloader/bootloader.bin
 nasm src/bootloader/stagetwo.asm -f bin -o build/bootloader/stwo.bin
-/usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/loader.c -o build/loader.o -O0
+/usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/kernel_head.c -o build/loader.o -O0
 /usr/opt/cross/bin/i386-elf-ld -T loaderlinker.ld -o build/loader.bin build/loader.o -nostdlib
 /usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/kernel.c -o build/kernel.o -O0
 /usr/opt/cross/bin/i386-elf-ld -T kernellinker.ld -o build/kernel.bin build/kernel.o -nostdlib
