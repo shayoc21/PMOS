@@ -8,14 +8,7 @@
 //
 // 	kernel_entry() will hand over to a user-space TTY once finished initialising everything.
 //
-#include "./include/vga_text.c"
-
-typedef unsigned char u8_t;
-typedef unsigned short u16_t;
-typedef unsigned int u32_t;
-typedef char i8_t;
-typedef short i16_t;
-typedef int i32_t;
+#include "./interrupts/idt.c"
 
 struct gdt_entry
 {
@@ -125,25 +118,24 @@ static struct task_state_segment global_TSS = {0};
 
 void call_interrupt(u8_t vector)
 {
-	__asm__ __volatile__ ( "int %0" : : "i"(vector));
 }
 
 void initialise_task_state_segment(gdt_selector ss_selector, u32_t sp)
 {
 	global_TSS.esp0 = sp;
 	global_TSS.ss0 = ss_selector;
-	unsigned long long base = (unsigned long long)&global_TSS;
+	u32_t base = (u32_t)&global_TSS;
 	u32_t limit = sizeof(global_TSS) - 1;
 
 	gdt[GDT_TSS] = (struct gdt_entry)
 	{
-		.limit_low = limit & 0xFFFF;
-		.base_low = base & 0xFFFF;
-		.base_middle = (base >> 16) & 0xFF;
-		.access = 0b10001001 //present, ring 0, system segment, type 0x9 = 32 bit available T	
-		.flags_limit_low = (limit >> 16) & 0xFFFF;
-		.base_high = (base >> 24) & 0xFF;
-	}
+		limit & 0xFFFF,
+		base & 0xFFFF,
+		(base >> 16) & 0xFF,
+		0b10001001, //present, ring 0, system segment, type 0x9 = 32 bit available T	
+		(limit >> 16) & 0xFFFF,
+		(base >> 24) & 0xFF
+	};
 }
 
 __attribute__((section(".text.kernel_entry")))
@@ -151,23 +143,24 @@ void kernel_entry()
 {
 	initialise_global_descriptor_table();
 	gdt_selector ss_selector = GDT_SELECTOR(2, 0);
-	//as in kernel_head.c, the sp will poi32_tto the top of page directory 769, mapping 0xC0400000->0xC07FFFFF. the stack has 4 pages for 16KB
+	//as in kernel_head.c, the sp will point to the top of page directory 769, mapping 0xC0400000->0xC07FFFFF. the stack has 4 pages for 16KB
 	u32_t sp = 0xC07FFFFF;
+
 	__asm__ volatile
 	(
-	 	"cli\n\t"
+		"cli\n\t"
 		"mov %0, %%ax\n\t"
 		"mov %%ax, %%ss\n\t"
-		"mov %1, %%eax\n\t"
-		"mov %%eax, %%sp\n\t"
+		"mov %1, %%esp\n\t"
 		:
 		: "r"(ss_selector), "r"(sp)
-		: "eax"
-	)
-	initialise_task_state_segment(ss_selector, sp);
-	initialise_interrupt_descriptor_table();
+		: "ax"
+	);
 
-	call_interrupt(0x90);
+	initialise_task_state_segment(ss_selector, sp);
+	initialise_idt();
+
+	__asm__ __volatile__ ( "int %0" : : "i"(0x90));
 
 	for(;;){}
 	return;

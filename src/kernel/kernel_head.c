@@ -9,8 +9,7 @@
 //		Jumps into the kernel at virtual 0xC0000000
 //
 
-#include "./include/vga_text.c"
-#include "./include/hardware_io.c"
+#include "./include/vga_text.h"
 
 static const char* kernel_file_name = "KERNEL  BIN";
 static const int disk_number = 0x80;
