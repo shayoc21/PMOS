@@ -61,3 +61,9 @@ This TTY will have some simple UNIX commands, but I don't expect real file io ye
 
 Paging set up just enough to launch the kernel at virtual 0xC0000000, message printed.
 
+### v0.1.1
+
+Interrupts finally set up.. both software and hardware interrupts.
+I am yet to test PIC interrupts though as this will likely require more sophisticated boilerplate
+
+

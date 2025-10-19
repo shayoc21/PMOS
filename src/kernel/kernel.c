@@ -8,8 +8,13 @@
 //
 // 	kernel_entry() will hand over to a user-space TTY once finished initialising everything.
 //
-#include "./interrupts/idt.c"
+#include "./interrupts/idt.h"
 
+struct 
+{
+	u16_t limit;
+	u32_t base;
+} __attribute__((packed)) gdtr;
 struct gdt_entry
 {
 	u16_t limit_low;
@@ -73,6 +78,9 @@ void initialise_global_descriptor_table()
 		0b11001111,	// flags_limit_low
 		0x00		// base_high
 	};
+	gdtr.limit = sizeof(gdt) - 1;
+	gdtr.base = (u32_t)&gdt;
+	__asm__ volatile("lgdt %0" : : "m"(gdtr));
 }
 
 struct task_state_segment
@@ -129,19 +137,32 @@ void initialise_task_state_segment(gdt_selector ss_selector, u32_t sp)
 
 	gdt[GDT_TSS] = (struct gdt_entry)
 	{
-		limit & 0xFFFF,
-		base & 0xFFFF,
-		(base >> 16) & 0xFF,
-		0b10001001, //present, ring 0, system segment, type 0x9 = 32 bit available T	
-		(limit >> 16) & 0xFFFF,
-		(base >> 24) & 0xFF
+		(u16_t)limit & 0xFFFF,
+		(u16_t)base & 0xFFFF,
+		(u8_t)(base >> 16) & 0xFF,
+		(u8_t)0b10001001, //present, ring 0, system segment, type 0x9 = 32 bit available T	
+		(u8_t)((0b1100 << 4) | ((limit >> 16) & 0x0F)),
+		(u8_t)((base >> 24) & 0xFF)
 	};
+	__asm__ volatile ("ltr %0" : : "r"(GDT_SELECTOR(GDT_TSS, 0)));
 }
 
 __attribute__((section(".text.kernel_entry")))
 void kernel_entry()
 {
 	initialise_global_descriptor_table();
+
+	u16_t kernel_seg = GDT_SELECTOR(GDT_KERNEL_DATA, 0);
+	__asm__ volatile
+	(
+		"mov %0, %%ax\n\t"
+		"mov %%ax, %%ds\n\t"
+		"mov %%ax, %%es\n\t"
+		"mov %%ax, %%fs\n\t"
+		"mov %%ax, %%gs\n\t"
+		: : "r"(kernel_seg) : "ax"
+	);
+
 	gdt_selector ss_selector = GDT_SELECTOR(2, 0);
 	//as in kernel_head.c, the sp will point to the top of page directory 769, mapping 0xC0400000->0xC07FFFFF. the stack has 4 pages for 16KB
 	u32_t sp = 0xC07FFFFF;
@@ -160,7 +181,13 @@ void kernel_entry()
 	initialise_task_state_segment(ss_selector, sp);
 	initialise_idt();
 
-	__asm__ __volatile__ ( "int %0" : : "i"(0x90));
+	vga_write_string("Below is 'test isr' and 'Divide by Zero'. If both print then ISR works", 15,0 , TEXT_COLOUR_SUCCESS);
+
+	//CALLING TEST INTERRUPT 0X90.. PRINTS A YELLOW "test isr" MESSAGE
+	__asm__ volatile ( "int %0" : : "i"(0x90));
+	//TESTING CPU EXCEPTIONS... CPU SHOULD THROW A DIV BY ZERO
+	volatile unsigned int z = 0;
+	__asm__ volatile ( "divl %0" : : "m"(z));
 
 	for(;;){}
 	return;

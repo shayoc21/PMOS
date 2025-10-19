@@ -31,6 +31,11 @@ extern void control_protection		(void);
 
 extern void isr_test(void);
 
+struct 
+{
+	u16_t limit;
+	u32_t base;
+} __attribute__((packed)) idtr;
 struct idt_entry
 {
 	u16_t offset_low;
@@ -54,7 +59,7 @@ void create_interrupt(u8_t vector, void (*isr)(void), u16_t segment, u8_t flags)
 }
 
 #define KERNEL_CODE_SEG 0x08
-#define INTERRUPT 0x0E
+#define INTERRUPT 0b10001110
 
 void initialise_idt()
 {
@@ -95,6 +100,10 @@ void initialise_idt()
 	create_interrupt(21, control_protection,        	KERNEL_CODE_SEG, INTERRUPT);
 
 	create_interrupt(0x90, isr_test, KERNEL_CODE_SEG, INTERRUPT);
+
+	idtr.limit = sizeof(idt) - 1;
+	idtr.base = (u32_t)&idt;
+	__asm__ volatile("lidt %0" : : "m"(idtr));	
 }
 
 

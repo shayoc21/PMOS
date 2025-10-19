@@ -11,11 +11,10 @@ nasm src/bootloader/stagetwo.asm -f bin -o build/bootloader/stwo.bin
 
 
 /usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/kernel.c -o build/kernel.o -O0
-/usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/interrupts/idt.c -o build/idt.o -O0
 /usr/opt/cross/bin/i386-elf-gcc -ffreestanding -c src/kernel/interrupts/handlers.c -o build/handlers.o -O0
 
 nasm -f elf32 src/kernel/interrupts/stubs.asm -o build/stubs.o
-/usr/opt/cross/bin/i386-elf-ld -T kernellinker.ld -o build/kernel.elf build/kernel.o build/idt.o build/handlers.o build/stubs.o build/text.o -nostdlib
+/usr/opt/cross/bin/i386-elf-ld -T kernellinker.ld -o build/kernel.elf build/kernel.o build/handlers.o build/stubs.o build/text.o -nostdlib
 /usr/opt/cross/bin/i386-elf-objcopy -O binary build/kernel.elf build/kernel.bin
 
 qemu-img create -f raw build/hdd.img 1G

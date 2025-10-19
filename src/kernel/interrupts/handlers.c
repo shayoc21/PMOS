@@ -38,21 +38,22 @@ struct isr_stack_frame
 
 
 //temporary definitions
-void scheduler_signal_error(const char* a) {}
-void system_panic(const char* a) {}
+void scheduler_signal_error(const char* a)
+{
+	vga_write_string(a, 20, 20, TEXT_COLOUR_FAILURE);
+}
+void system_panic(const char* a) {scheduler_signal_error(a); for(;;){}}
 
 #define DEFINE_HANDLER(_name,_msg) 							\
 void _name(struct isr_stack_frame frame)						\
 {											\
-	if ((frame.cs & 3) == 3) 							\
-	{										\
-		scheduler_signal_error(_msg);						\
-	} 										\
-	else										\
+	scheduler_signal_error(_msg);						\
+	if ((frame.cs & 3) == 0) 							\
        	{										\
 		system_panic(_msg);							\
 	}										\
 }											
+DEFINE_HANDLER(divide_by_zero_handler, "Divide by Zero")
 DEFINE_HANDLER(debug_exception_handler, "Debug Exception")
 DEFINE_HANDLER(nmi_handler, "Non-Maskable Interrupt")
 DEFINE_HANDLER(breakpoint_handler, "Breakpoint")
@@ -76,7 +77,7 @@ DEFINE_HANDLER(control_protection_handler, "Control Protection Exception")
 
 void isr_test_handler(struct isr_stack_frame frame)
 {
-	vga_write_string("test isr", 17, 30, TEXT_COLOUR_PROCESS);
+	vga_write_string("test isr", 17, 20, TEXT_COLOUR_PROCESS);
 }	
 
 
