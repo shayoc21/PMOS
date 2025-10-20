@@ -12,6 +12,7 @@
 
 #include "./hardware_io.c"
 
+void clear_vga_background(unsigned char bg_colour);
 void vga_write_string(const char* string, int line, int character, unsigned char text_colour_background);
 void vga_write_hex(const int hex, int line, int character, unsigned char text_colour_background);
 void vga_clear();

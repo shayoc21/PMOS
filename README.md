@@ -7,3 +7,5 @@ Still in *very* early development. The name is temporary.
 
 #### Read log.md for devlog, documentation etc.
 
+![Image of OS in current working state](git_images/os_ss.png)
+

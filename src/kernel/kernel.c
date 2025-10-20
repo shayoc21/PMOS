@@ -181,7 +181,9 @@ void kernel_entry()
 	initialise_task_state_segment(ss_selector, sp);
 	initialise_idt();
 
+
 	vga_write_string("Below is 'test isr' and 'Divide by Zero'. If both print then ISR works", 15,0 , TEXT_COLOUR_SUCCESS);
+
 
 	//CALLING TEST INTERRUPT 0X90.. PRINTS A YELLOW "test isr" MESSAGE
 	__asm__ volatile ( "int %0" : : "i"(0x90));

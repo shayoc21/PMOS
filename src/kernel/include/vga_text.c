@@ -1,5 +1,14 @@
 #include "./vga_text.h"
 
+void clear_vga_background(unsigned char bg_colour)
+{
+	volatile short* ptr = (volatile short*)VGA_TEXT_BUFFER;
+	int c = VGA_TEXT_LINE_WIDTH*VGA_TEXT_COLUMN_HEIGHT;
+	while (c--)
+	{
+		*ptr++ = (*ptr & 0x0FFF) | (bg_colour << 12);
+	}
+}
 
 void vga_write_string(const char* string, int line, int character, unsigned char text_colour_background)
 {
