@@ -23,7 +23,7 @@ void vga_write_string(const char* string, int line, int character, unsigned char
 //prints 4 bytes of hex in big endian
 void vga_write_hex(const int hex, int line, int character, unsigned char text_colour_background)
 {
-	char buf[9];
+	char buf[10];
 	const char* digits = "0123456789ABCDEF";
 	buf[0] = '0';
 	buf[1] = 'x';
