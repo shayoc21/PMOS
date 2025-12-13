@@ -80,4 +80,9 @@ ENTRY_NO_ERROR	control_protection, control_protection_handler
 
 ENTRY_NO_ERROR isr_test, isr_test_handler
 
+ENTRY_NO_ERROR programmable_interrupt_timer, programmable_interrupt_timer_handler
+
+ENTRY_NO_ERROR keyboard_irq, keyboard_irq_handler
+
+			
 

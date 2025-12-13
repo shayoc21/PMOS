@@ -29,6 +29,8 @@ extern void simd_floating_point		(void);
 extern void virtualization_exception	(void);
 extern void control_protection		(void);
 
+extern void programmable_interrupt_timer(void);
+
 extern void isr_test(void);
 
 struct 
@@ -63,7 +65,11 @@ void create_interrupt(u8_t vector, void (*isr)(void), u16_t segment, u8_t flags)
 
 void initialise_idt()
 {
-	//reprogram the PIC
+	//
+	//	reprograms master and slave PICs so their IRQs don't overlap CPU exceptions
+	//	IRQ0-7 to interrupts 0x20-0x27, IRQ8-15 to 0x28-0x2F
+	//	Tells master the slave is attached to IRQ2 and sets both PICs to 8086 mode.
+	//	
 
 	outb(0x0020, 0x11);
 	outb(0x00A0, 0x11);
@@ -77,33 +83,40 @@ void initialise_idt()
 	outb(0x0021, 0x01);
 	outb(0x00A1, 0x01);
 
-	create_interrupt( 0, divide_by_zero,       		KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 1, debug_exception,           	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 2, non_maskable_interrupt,     	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 3, breakpoint,                 	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 4, overflow,                   	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 5, bound_range_exceeded,       	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 6, invalid_opcode,             	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 7, device_not_available,       	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 8, double_fault,               	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt( 9, coprocessor_segment_overrun,	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(10, invalid_tss,                	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(11, segment_not_present,        	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(12, stack_segment_fault,        	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(13, general_protection_fault,   	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(14, page_fault,                 	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(16, floating_point_error,       	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(17, alignment_check,           	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(18, machine_check,             	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(19, simd_floating_point,       	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(20, virtualization_exception,  	KERNEL_CODE_SEG, INTERRUPT);
-	create_interrupt(21, control_protection,        	KERNEL_CODE_SEG, INTERRUPT);
+	outb(0x21, 0xFE);
+
+	//CPU exceptions
+	create_interrupt(0x00, divide_by_zero,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x01, debug_exception,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x02, non_maskable_interrupt,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x03, breakpoint,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x04, overflow,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x05, bound_range_exceeded,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x06, invalid_opcode,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x07, device_not_available,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x08, double_fault,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x09, coprocessor_segment_overrun,	KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x0A, invalid_tss,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x0B, segment_not_present,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x0C, stack_segment_fault,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x0D, general_protection_fault,	KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x0E, page_fault,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x10, floating_point_error,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x11, alignment_check,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x12, machine_check,			KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x13, simd_floating_point,		KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x14, virtualization_exception,	KERNEL_CODE_SEG, INTERRUPT);
+	create_interrupt(0x15, control_protection,		KERNEL_CODE_SEG, INTERRUPT);
+
+	//IRQs
+	create_interrupt(0x20, programmable_interrupt_timer,	KERNEL_CODE_SEG, INTERRUPT);
 
 	create_interrupt(0x90, isr_test, KERNEL_CODE_SEG, INTERRUPT);
 
 	idtr.limit = sizeof(idt) - 1;
 	idtr.base = (u32_t)&idt;
 	__asm__ volatile("lidt %0" : : "m"(idtr));	
+	__asm__ volatile("sti");
 }
 
 

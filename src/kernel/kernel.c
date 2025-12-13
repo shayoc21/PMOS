@@ -187,9 +187,6 @@ void kernel_entry()
 
 	//CALLING TEST INTERRUPT 0X90.. PRINTS A YELLOW "test isr" MESSAGE
 	__asm__ volatile ( "int %0" : : "i"(0x90));
-	//TESTING CPU EXCEPTIONS... CPU SHOULD THROW A DIV BY ZERO
-	volatile unsigned int z = 0;
-	__asm__ volatile ( "divl %0" : : "m"(z));
 
 	for(;;){}
 	return;
